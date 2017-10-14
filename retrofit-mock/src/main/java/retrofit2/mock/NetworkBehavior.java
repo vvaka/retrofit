@@ -36,8 +36,8 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
  * Behavior can be applied to a Retrofit interface with {@link MockRetrofit}. Behavior can also
  * be applied elsewhere using {@link #calculateDelay(TimeUnit)} and {@link #calculateIsFailure()}.
  * <p>
- * By default, instances of this class will use a 2 second delay with 40% variance and failures
- * will occur 3% of the time.
+ * By default, instances of this class will use a 2 second delay with 40% variance. Failures
+ * will occur 3% of the time. HTTP errors will occur 0% of the time.
  */
 public final class NetworkBehavior {
   private static final int DEFAULT_DELAY_MS = 2000; // Network calls will take 2 seconds.
@@ -54,6 +54,7 @@ public final class NetworkBehavior {
    * Create an instance with default behavior which uses {@code random} to control variance and
    * failure calculation.
    */
+  @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
   public static NetworkBehavior create(Random random) {
     if (random == null) throw new NullPointerException("random == null");
     return new NetworkBehavior(random);
@@ -75,7 +76,7 @@ public final class NetworkBehavior {
   private NetworkBehavior(Random random) {
     this.random = random;
 
-    failureException = new IOException("Mock failure!");
+    failureException = new MockRetrofitIOException();
     failureException.setStackTrace(new StackTraceElement[0]);
   }
 
@@ -120,6 +121,7 @@ public final class NetworkBehavior {
    * It is a best practice to remove the stack trace from {@code exception} since it can
    * misleadingly point to code unrelated to this class.
    */
+  @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
   public void setFailureException(Throwable exception) {
     if (exception == null) {
       throw new NullPointerException("exception == null");
@@ -147,6 +149,7 @@ public final class NetworkBehavior {
    * Set the error response factory to be used when an error is triggered. This factory may only
    * return responses for which {@link Response#isSuccessful()} returns false.
    */
+  @SuppressWarnings("ConstantConditions") // Guarding public API nullability.
   public void setErrorFactory(Callable<Response<?>> errorFactory) {
     if (errorFactory == null) {
       throw new NullPointerException("errorFactory == null");

@@ -16,6 +16,8 @@
 package retrofit2;
 
 import java.io.IOException;
+import javax.annotation.Nullable;
+import javax.annotation.concurrent.GuardedBy;
 import okhttp3.MediaType;
 import okhttp3.Request;
 import okhttp3.ResponseBody;
@@ -28,16 +30,18 @@ import static retrofit2.Utils.checkNotNull;
 
 final class OkHttpCall<T> implements Call<T> {
   private final ServiceMethod<T, ?> serviceMethod;
-  private final Object[] args;
+  private final @Nullable Object[] args;
 
   private volatile boolean canceled;
 
-  // All guarded by this.
-  private okhttp3.Call rawCall;
-  private Throwable creationFailure; // Either a RuntimeException or IOException.
+  @GuardedBy("this")
+  private @Nullable okhttp3.Call rawCall;
+  @GuardedBy("this")
+  private @Nullable Throwable creationFailure; // Either a RuntimeException or IOException.
+  @GuardedBy("this")
   private boolean executed;
 
-  OkHttpCall(ServiceMethod<T, ?> serviceMethod, Object[] args) {
+  OkHttpCall(ServiceMethod<T, ?> serviceMethod, @Nullable Object[] args) {
     this.serviceMethod = serviceMethod;
     this.args = args;
   }
@@ -114,11 +118,7 @@ final class OkHttpCall<T> implements Call<T> {
       }
 
       @Override public void onFailure(okhttp3.Call call, IOException e) {
-        try {
-          callback.onFailure(OkHttpCall.this, e);
-        } catch (Throwable t) {
-          t.printStackTrace();
-        }
+        callFailure(e);
       }
 
       private void callFailure(Throwable e) {
