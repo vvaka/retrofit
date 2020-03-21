@@ -66,7 +66,7 @@
     <moshi.version>1.5.0</moshi.version>
 
     <!-- Sample Dependencies -->
-    <jsoup.version>1.7.3</jsoup.version>
+    <jsoup.version>1.8.3</jsoup.version>
 
     <!-- Test Dependencies -->
     <junit.version>4.12</junit.version>
